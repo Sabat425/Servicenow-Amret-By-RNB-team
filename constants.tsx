@@ -128,6 +128,12 @@ export const Icon = ({ name, className = "w-5 h-5" }: { name: string; className?
         <circle cx="15" cy="5" r="1"></circle>
         <circle cx="15" cy="19" r="1"></circle>
       </svg>
+    ),
+    eye: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
     )
   };
 
@@ -219,6 +225,45 @@ export const MOCK_TICKETS: Ticket[] = [
 
 export const MOCK_MASTER_DATA: MasterData[] = [
   {
+    id: '001',
+    service: 'CPM Web Application',
+    category: 'LRO Assessments',
+    subCategory: 'Client Portfolio Data Error',
+    issueType: 'Data Error',
+    impact: '3 - Low',
+    urgency: '3 - Low',
+    department: 'Loan Recovery',
+    division: 'RISK DIVISION',
+    incEnd: 'YES',
+    steps: `1. Log in to ticketing system as end user
+2. Create new Incident
+3. Select Category: CPM Web Application
+4. Select Sub Category: LRO Assessments
+5. Select Issue Type: Client Portfolio Data Error
+6. Fill description and submit`,
+    expectedResult: `Impact: 3 - Low
+Urgency: 3 - Low
+Priority: P5
+Department: Loan
+Recovery
+Division: RISK
+DIVISION
+Inc_end_user:
+YES
+Inc_itil_user:
+YES
+Assignment
+Group:
+Service Desk
+SR_end_user:
+YES
+SR_itil_user:
+YES
+Change: YES
+Problem: YES`,
+    remarks: 'TC-001 Verify auto-configuration'
+  },
+  {
     id: '1',
     service: 'Printing Tool',
     category: 'Individual Credit',
@@ -228,7 +273,10 @@ export const MOCK_MASTER_DATA: MasterData[] = [
     urgency: '2 - Medium',
     department: 'Operations',
     division: 'Operations',
-    incEnd: 'NO'
+    incEnd: 'NO',
+    steps: '1. Check printer cable\n2. Restart spooler service',
+    expectedResult: 'Printer should appear online',
+    remarks: 'Standard procedure'
   },
   {
     id: '2',

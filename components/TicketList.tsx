@@ -9,6 +9,37 @@ interface TicketListProps {
 
 const COLORS = ['#589507', '#b7db25', '#396f04', '#0a2004'];
 
+// Helper component for cells with long text
+const ExpandableTextCell = ({ text }: { text?: string }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    
+    if (!text) return <span className="text-gray-400">-</span>;
+
+    return (
+        <div 
+            className="group relative cursor-pointer"
+            onClick={() => setIsExpanded(!isExpanded)}
+        >
+            <div className={`transition-all duration-300 ${isExpanded ? '' : 'line-clamp-2'}`}>
+                <span className="whitespace-pre-line">{text}</span>
+            </div>
+            
+            {!isExpanded && (
+                <div className="text-[10px] text-amret-600 font-bold opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                    Click to expand
+                </div>
+            )}
+            
+            {/* Visual indicator for expanded state */}
+             {isExpanded && (
+                <div className="text-[10px] text-gray-400 mt-2 border-t border-gray-100 pt-1">
+                    Show less
+                </div>
+            )}
+        </div>
+    );
+};
+
 const TicketList: React.FC<TicketListProps> = ({ tickets }) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [view, setView] = useState<'list' | 'analytics' | 'master'>('list');
@@ -47,9 +78,9 @@ const TicketList: React.FC<TicketListProps> = ({ tickets }) => {
   ];
 
   const renderMasterTable = () => (
-    <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 flex-1 flex flex-col overflow-hidden animate-fade-in">
+    <div className="bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 flex-1 flex flex-col overflow-hidden animate-fade-in h-full">
         {/* Table Toolbar */}
-        <div className="p-2 border-b border-gray-200 dark:border-gray-800 flex items-center bg-gray-50 dark:bg-slate-800 space-x-2">
+        <div className="p-2 border-b border-gray-200 dark:border-gray-800 flex items-center bg-gray-50 dark:bg-slate-800 space-x-2 shrink-0">
            <button className="text-gray-500 hover:text-amret-600"><Icon name="menu" className="w-4 h-4" /></button>
            <button className="text-gray-500 hover:text-amret-600"><Icon name="filter" className="w-4 h-4" /></button>
            <div className="flex items-center bg-white dark:bg-slate-900 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm h-8 px-2">
@@ -67,17 +98,26 @@ const TicketList: React.FC<TicketListProps> = ({ tickets }) => {
            </button>
         </div>
 
-        {/* Master Table Content */}
-        <div className="overflow-auto flex-1">
-            <table className="w-full text-left border-collapse min-w-[1200px]">
-                <thead className="bg-gray-100 dark:bg-slate-800 sticky top-0 z-10">
+        {/* Master Table Content - Critical Fix: flex-1 and overflow-auto here ensures scrollbar is attached to this div, not the window */}
+        <div className="overflow-auto flex-1 relative custom-scrollbar">
+            <table className="w-full text-left border-collapse min-w-[2000px]">
+                <thead className="bg-gray-100 dark:bg-slate-800 sticky top-0 z-30 shadow-sm">
                     <tr>
-                        <th className="p-2 border-b border-gray-200 dark:border-gray-700 w-8">
+                        {/* Sticky Checkbox Column */}
+                        <th className="p-2 border-b border-gray-200 dark:border-gray-700 w-10 sticky left-0 z-40 bg-gray-100 dark:bg-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                             <input type="checkbox" className="rounded border-gray-400" />
                         </th>
-                        <th className="p-2 border-b border-gray-200 dark:border-gray-700 w-8"><Icon name="search" className="w-4 h-4 text-gray-400" /></th>
-                        {['Service', 'Category', 'Sub Category', 'Issue Type', 'Impact', 'Urgency', 'Department', 'Division', 'Inc_end'].map((header) => (
-                            <th key={header} className="p-2 border-b border-gray-200 dark:border-gray-700 font-semibold text-xs text-gray-700 dark:text-gray-200">
+                        
+                        {/* Sticky Service Column */}
+                         <th className="p-2 border-b border-gray-200 dark:border-gray-700 w-48 sticky left-10 z-40 bg-gray-100 dark:bg-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] font-semibold text-xs text-gray-700 dark:text-gray-200">
+                             <div className="flex flex-col gap-1">
+                                    <span>Service</span>
+                                    <input type="text" placeholder="Search" className="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs font-normal" />
+                            </div>
+                        </th>
+
+                        {['Category', 'Sub Category', 'Steps', 'Expected Result', 'Remarks', 'Issue Type', 'Impact', 'Urgency', 'Department', 'Division', 'Inc_end'].map((header) => (
+                            <th key={header} className="p-2 border-b border-gray-200 dark:border-gray-700 font-semibold text-xs text-gray-700 dark:text-gray-200 min-w-[150px]">
                                 <div className="flex flex-col gap-1">
                                     <span>{header}</span>
                                     <input type="text" placeholder="Search" className="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs font-normal" />
@@ -88,20 +128,37 @@ const TicketList: React.FC<TicketListProps> = ({ tickets }) => {
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                     {MOCK_MASTER_DATA.map((row, i) => (
-                        <tr key={row.id} className="hover:bg-amret-50 dark:hover:bg-slate-800/50 group text-xs text-gray-700 dark:text-gray-300">
-                             <td className="p-2 text-center"><input type="checkbox" className="rounded border-gray-300" /></td>
-                             <td className="p-2 text-center">
-                                 <button className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-amret-600"><Icon name="activity" className="w-3 h-3" /></button>
+                        <tr key={row.id} className="hover:bg-amret-50 dark:hover:bg-slate-800/50 group text-xs text-gray-700 dark:text-gray-300 transition-colors">
+                             {/* Sticky Checkbox Cell */}
+                             <td className="p-2 text-center sticky left-0 z-20 bg-white dark:bg-slate-900 group-hover:bg-amret-50 dark:group-hover:bg-slate-800/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] border-b border-gray-100 dark:border-gray-800">
+                                <input type="checkbox" className="rounded border-gray-300" />
                              </td>
-                             <td className="p-2 text-blue-600 dark:text-blue-400 font-medium hover:underline cursor-pointer">{row.service}</td>
-                             <td className="p-2">{row.category}</td>
-                             <td className="p-2">{row.subCategory}</td>
-                             <td className="p-2">{row.issueType}</td>
-                             <td className="p-2">{row.impact}</td>
-                             <td className="p-2">{row.urgency}</td>
-                             <td className="p-2 text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">{row.department}</td>
-                             <td className="p-2">{row.division}</td>
-                             <td className="p-2">{row.incEnd}</td>
+                             
+                             {/* Sticky Service Cell */}
+                             <td className="p-2 text-blue-600 dark:text-blue-400 font-medium hover:underline cursor-pointer sticky left-10 z-20 bg-white dark:bg-slate-900 group-hover:bg-amret-50 dark:group-hover:bg-slate-800/50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] border-b border-gray-100 dark:border-gray-800 align-top">
+                                {row.service}
+                             </td>
+
+                             <td className="p-2 align-top">{row.category}</td>
+                             <td className="p-2 align-top">{row.subCategory}</td>
+                             
+                             {/* Steps - Expandable Cell */}
+                             <td className="p-2 min-w-[250px] align-top bg-orange-50/30 dark:bg-orange-900/10">
+                                <ExpandableTextCell text={row.steps} />
+                             </td>
+                             
+                             {/* Expected Result - Expandable Cell */}
+                             <td className="p-2 min-w-[200px] align-top bg-blue-50/30 dark:bg-blue-900/10">
+                                <ExpandableTextCell text={row.expectedResult} />
+                             </td>
+
+                             <td className="p-2 align-top">{row.remarks || '-'}</td>
+                             <td className="p-2 align-top">{row.issueType}</td>
+                             <td className="p-2 align-top">{row.impact}</td>
+                             <td className="p-2 align-top">{row.urgency}</td>
+                             <td className="p-2 text-blue-600 dark:text-blue-400 hover:underline cursor-pointer align-top">{row.department}</td>
+                             <td className="p-2 align-top">{row.division}</td>
+                             <td className="p-2 align-top">{row.incEnd}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -109,7 +166,7 @@ const TicketList: React.FC<TicketListProps> = ({ tickets }) => {
         </div>
         
         {/* Footer */}
-        <div className="bg-gray-50 dark:bg-slate-800 border-t border-gray-200 dark:border-gray-700 p-2 flex items-center justify-between text-xs">
+        <div className="bg-gray-50 dark:bg-slate-800 border-t border-gray-200 dark:border-gray-700 p-2 flex items-center justify-between text-xs shrink-0">
             <div className="flex items-center text-gray-500 dark:text-gray-400">
                 <span className="mr-2">1 to {MOCK_MASTER_DATA.length} of 16,725</span>
                 <button className="hover:bg-gray-200 dark:hover:bg-slate-700 p-1 rounded"><Icon name="chevronRight" className="w-3 h-3 rotate-180" /></button>
@@ -123,9 +180,9 @@ const TicketList: React.FC<TicketListProps> = ({ tickets }) => {
   );
 
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="p-6 h-full flex flex-col overflow-hidden">
         {/* Toolbar */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 animate-slide-up">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 animate-slide-up shrink-0">
         <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 p-1 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm">
              <button 
                 onClick={() => setView('list')}
@@ -168,7 +225,7 @@ const TicketList: React.FC<TicketListProps> = ({ tickets }) => {
       </div>
 
       {view === 'master' ? renderMasterTable() : view === 'analytics' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in overflow-y-auto">
               <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 h-80">
                   <h3 className="text-lg font-bold text-amret-900 dark:text-amret-100 mb-4">Requests by Status</h3>
                   <ResponsiveContainer width="100%" height="100%">

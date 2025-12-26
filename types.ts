@@ -29,6 +29,10 @@ export interface MasterData {
   department: string;
   division: string;
   incEnd: string;
+  // New fields for the complex data
+  steps?: string;
+  expectedResult?: string;
+  remarks?: string;
 }
 
 export type ViewMode = 'dashboard' | 'list' | 'detail';
